@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { AbsoluteFill } from "remotion";
 
 // PUBLIC_INTERFACE
@@ -22,13 +22,21 @@ const FONTS = [
 ];
 
 // Simple countdown preview component (could be replaced with a Remotion composition)
+type CountdownPreviewProps = {
+  duration: number;
+  text: string;
+  fontFamily: string;
+  textColor: string;
+  bgColor: string;
+};
+
 const CountdownPreview = ({
   duration,
   text,
   fontFamily,
   textColor,
   bgColor,
-}) => {
+}: CountdownPreviewProps) => {
   // Since we don't need a real timer for preview (Remotion controls this in rendered video),
   // we just display the initial duration.
   return (
@@ -89,13 +97,15 @@ export const CountDownCraftContainer = () => {
   const isMobile = false;
 
   // PUBLIC_INTERFACE
-  const handleEditorChange = (prop) => (e) => {
-    const value = e.target.type === "color" ? e.target.value : e.target.value;
-    setEditor((prev) => ({
-      ...prev,
-      [prop]: value
-    }));
-  };
+  const handleEditorChange =
+    (prop: keyof typeof defaultEditorState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const value = e.target.type === "color" ? e.target.value : e.target.value;
+      setEditor((prev) => ({
+        ...prev,
+        [prop]: value
+      }));
+    };
 
   // PUBLIC_INTERFACE
   const handleExport = useCallback(async () => {
