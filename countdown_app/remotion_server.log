@@ -2,3 +2,4 @@
 > remotion@1.0.0 dev
 > remotion studio --port 3000
 
+Server ready - Local: http://localhost:3000, Network: http://172.17.0.2:3000
