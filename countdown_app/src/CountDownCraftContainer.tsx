@@ -389,7 +389,7 @@ export const CountDownCraftContainer = () => {
         </form>
         <div style={{ marginTop: 32 }}>
           <button
-            disabled={exporting}
+            disabled={!!exporting} // exporting can now be boolean or string
             onClick={handleExport}
             style={{
               background: COLOR_SECONDARY,
@@ -408,14 +408,24 @@ export const CountDownCraftContainer = () => {
             aria-label="Export video"
             type="button"
           >
-            {exporting ? "Exporting..." : "Export as MP4"}
+            {exporting === "rendering"
+              ? "Rendering MP4..."
+              : exporting
+              ? "Exporting..."
+              : "Export as MP4"}
           </button>
         </div>
-        {exporting && (
+        {!!exporting && (
           <div style={{
-            color: COLOR_ACCENT, marginTop: 10, textAlign: "center", fontWeight: 500, fontSize: 16
+            color: COLOR_ACCENT,
+            marginTop: 10,
+            textAlign: "center",
+            fontWeight: 500,
+            fontSize: 16
           }}>
-            Exporting is stubbed in development build.
+            {exporting === "rendering"
+              ? "Rendering video in browser. This may take a while. You'll get a download when done."
+              : "Export started..."}
           </div>
         )}
         <footer style={{
