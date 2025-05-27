@@ -210,7 +210,7 @@ export const CountDownCraftContainer = () => {
 
   // PUBLIC_INTERFACE
   const handleExport = useCallback(async () => {
-    setExporting(true);
+    setExporting("starting");
 
     // Is Remotion's browser rendering API available?
     // @ts-ignore
@@ -218,7 +218,7 @@ export const CountDownCraftContainer = () => {
     if (!isRemotionBrowserAvailable) {
       alert("Remotion browser rendering is only supported in a local browser preview.\n" +
         "In CI/build, use the CLI to render. (See README)");
-      setExporting(false);
+      setExporting(null);
       return;
     }
 
@@ -263,19 +263,19 @@ export const CountDownCraftContainer = () => {
         audioCodec: "aac",
         defaultProps: inputProps,
         downloadFileName: `countdown-${Date.now()}.mp4`,
-        onProgress: (progress: number) => {
+        onProgress: (_progress: number) => {
           // Optionally provide progress UI
         }
       });
 
-      setExporting(false);
+      setExporting(null);
     } catch (err) {
       alert(
         "Export failed: " +
           ((err && (err as any).message) || err || "Unknown error") +
           "\n\nTry using the CLI for video export if this error persists."
       );
-      setExporting(false);
+      setExporting(null);
     }
   }, [editor]);
 
