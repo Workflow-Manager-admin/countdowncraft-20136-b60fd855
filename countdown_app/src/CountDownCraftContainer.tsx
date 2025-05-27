@@ -38,6 +38,7 @@ type CountdownLivePreviewProps = {
  * CountdownLivePreview - shows a user-controlled countdown with a Play/Stop button.
  * Handles timer logic for demo purposes; the Remotion preview remains static.
  */
+/* eslint-disable no-undef */
 const CountdownLivePreview = ({
   duration,
   text,
@@ -55,7 +56,7 @@ const CountdownLivePreview = ({
   }, [duration]);
 
   // Timer ref so interval is cleared on unmount or stop
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Robust timer management (React-friendly, avoids stale closure)
   useEffect(() => {
