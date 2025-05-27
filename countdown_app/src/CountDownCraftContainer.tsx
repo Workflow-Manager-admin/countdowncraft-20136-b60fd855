@@ -190,7 +190,8 @@ const defaultEditorState = {
 export const CountDownCraftContainer = () => {
   const [editor, setEditor] = useState(defaultEditorState);
   const [showDrawer, setShowDrawer] = useState(false);
-  const [exporting, setExporting] = useState(false);
+  // Instead of boolean/string, use a state object for explicit status
+  const [exporting, setExporting] = useState<null | "starting" | "rendering">(null);
 
   // Static mobile detection stub; always false in SSR/build for Remotion safety.
   // In real SPA/CSR, replace with a custom hook using window.matchMedia or screen width.
