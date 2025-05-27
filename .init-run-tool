@@ -1,0 +1,4 @@
+{
+    "command": "BROWSER=none npm run dev -- --port <port>",
+    "working_directory": "/home/kavia/workspace/code-generation/countdowncraft-20136-b60fd855/countdown_app"
+}
