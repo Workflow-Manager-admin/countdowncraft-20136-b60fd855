@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef } from "react";
-import { AbsoluteFill, useVideoConfig, Player, continueRender, delayRender } from "remotion";
+import React, { useState, useCallback } from "react";
+import { AbsoluteFill, useVideoConfig } from "remotion";
 
 // PUBLIC_INTERFACE
 /**
@@ -29,19 +29,8 @@ const CountdownPreview = ({
   textColor,
   bgColor,
 }) => {
-  const videoConfig = useVideoConfig();
-  const [display, setDisplay] = useState(duration);
-
-  React.useEffect(() => {
-    setDisplay(duration);
-    if (duration > 0) {
-      const interval = setInterval(() => {
-        setDisplay((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [duration]);
-
+  // Since we don't need a real timer for preview (Remotion controls this in rendered video),
+  // we just display the initial duration.
   return (
     <AbsoluteFill
       style={{
@@ -74,7 +63,8 @@ const CountdownPreview = ({
         fontWeight: "bold",
         letterSpacing: 2
       }}>
-        {String(display).padStart(2, "0")}
+        {/* Just show the starting duration (since Remotion's live preview is static, this makes more sense) */}
+        {String(duration).padStart(2, "0")}
       </div>
     </AbsoluteFill>
   );
@@ -93,7 +83,13 @@ export const CountDownCraftContainer = () => {
   const [editor, setEditor] = useState(defaultEditorState);
   const [showDrawer, setShowDrawer] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const playerRef = useRef(null);
+
+  // Detect mobile by screen width at initial render only.
+  const [isMobile] = useState(() =>
+    typeof navigator !== "undefined"
+      ? /Mobi|Android/i.test(navigator.userAgent) || (typeof window !== "undefined" && window.innerWidth < 900)
+      : false
+  );
 
   // PUBLIC_INTERFACE
   const handleEditorChange = (prop) => (e) => {
@@ -106,17 +102,16 @@ export const CountDownCraftContainer = () => {
 
   // PUBLIC_INTERFACE
   const handleExport = useCallback(async () => {
-    // Export logic using Remotion Lambda or render API.
     setExporting(true);
-    // Example placeholder for export logic:
-    setTimeout(() => {
-      alert("Export as MP4 would be triggered here.");
-      setExporting(false);
-    }, 1000);
-  }, []);
 
-  // Responsiveness
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 900;
+    // Actual export logic would involve Remotion APIs;
+    // here we simply show a visible message.
+    // eslint-disable-next-line no-console
+    console.log("Export as MP4 would be triggered here.");
+    setTimeout(() => {
+      setExporting(false);
+    }, 1200);
+  }, []);
 
   return (
     <div
@@ -246,10 +241,18 @@ export const CountDownCraftContainer = () => {
               transition: "background .2s"
             }}
             aria-label="Export video"
+            type="button"
           >
             {exporting ? "Exporting..." : "Export as MP4"}
           </button>
         </div>
+        {exporting && (
+          <div style={{
+            color: COLOR_ACCENT, marginTop: 10, textAlign: "center", fontWeight: 500, fontSize: 16
+          }}>
+            Exporting is stubbed in development build.
+          </div>
+        )}
         <footer style={{
           fontSize: 12, color: "#a0a4de", marginTop: 18, textAlign: "center"
         }}>
@@ -320,6 +323,7 @@ export const CountDownCraftContainer = () => {
               cursor: "pointer",
               zIndex: 3
             }}
+            type="button"
           >☰</button>
         )}
       </div>
