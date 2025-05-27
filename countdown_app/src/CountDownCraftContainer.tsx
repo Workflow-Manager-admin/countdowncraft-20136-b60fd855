@@ -21,8 +21,11 @@ const FONTS = [
   { label: "Mono", value: "Menlo, Monaco, monospace" }
 ];
 
-// Simple countdown preview component (could be replaced with a Remotion composition)
-type CountdownPreviewProps = {
+import { useState, useCallback, useRef, useEffect } from "react";
+import { AbsoluteFill } from "remotion";
+
+// Simple countdown live preview component with play/stop
+type CountdownLivePreviewProps = {
   duration: number;
   text: string;
   fontFamily: string;
@@ -30,15 +33,66 @@ type CountdownPreviewProps = {
   bgColor: string;
 };
 
-const CountdownPreview = ({
+// PUBLIC_INTERFACE
+/**
+ * CountdownLivePreview - shows a user-controlled countdown with a Play/Stop button.
+ * Handles timer logic for demo purposes; the Remotion preview remains static.
+ */
+const CountdownLivePreview = ({
   duration,
   text,
   fontFamily,
   textColor,
   bgColor,
-}: CountdownPreviewProps) => {
-  // Since we don't need a real timer for preview (Remotion controls this in rendered video),
-  // we just display the initial duration.
+}: CountdownLivePreviewProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [current, setCurrent] = useState(duration);
+
+  // Restart the display when the duration setting changes
+  useEffect(() => {
+    setCurrent(duration);
+    setIsPlaying(false);
+  }, [duration]);
+
+  // Timer ref so interval is cleared on unmount or stop
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Robust timer management (React-friendly, avoids stale closure)
+  useEffect(() => {
+    if (isPlaying && current > 0) {
+      intervalRef.current = setInterval(() => {
+        setCurrent((prev) => {
+          if (prev > 1) {
+            return prev - 1;
+          }
+          // Stop at zero
+          setIsPlaying(false);
+          return 0;
+        });
+      }, 1000);
+    }
+    // Cleanup interval on stop
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isPlaying, current]);
+
+  // (Re-)start the countdown
+  const handlePlay = () => {
+    setCurrent(duration);
+    setIsPlaying(true);
+  };
+
+  // Stop the countdown
+  const handleStop = () => {
+    setIsPlaying(false);
+  };
+
+  const timeString = String(current).padStart(2, "0");
+
   return (
     <AbsoluteFill
       style={{
@@ -71,12 +125,61 @@ const CountdownPreview = ({
         fontWeight: "bold",
         letterSpacing: 2
       }}>
-        {/* Just show the starting duration (since Remotion's live preview is static, this makes more sense) */}
-        {String(duration).padStart(2, "0")}
+        {timeString}
+      </div>
+      {/* Play/Stop controls */}
+      <div style={{ marginTop: 22 }}>
+        {!isPlaying && (
+          <button
+            onClick={handlePlay}
+            style={{
+              background: COLOR_SECONDARY,
+              color: "#fff",
+              border: "none",
+              borderRadius: 100,
+              padding: "12px 36px",
+              fontWeight: "bold",
+              fontSize: 22,
+              fontFamily: "inherit",
+              marginRight: 12,
+              cursor: "pointer",
+              outline: "none",
+              boxShadow: isPlaying ? "0 2px 8px 0 #0ec45c55" : undefined
+            }}
+            aria-label={current === 0 ? "Restart Countdown" : "Play Countdown"}
+            type="button"
+          >
+            {current === 0 ? "Restart" : "Play"}
+          </button>
+        )}
+        {isPlaying && (
+          <button
+            onClick={handleStop}
+            style={{
+              background: COLOR_ACCENT,
+              color: "#fff",
+              border: "none",
+              borderRadius: 100,
+              padding: "12px 36px",
+              fontWeight: "bold",
+              fontSize: 22,
+              fontFamily: "inherit",
+              marginLeft: 12,
+              cursor: "pointer",
+              outline: "none",
+              boxShadow: "0 2px 8px 0 #c71f3b44"
+            }}
+            aria-label="Stop Countdown"
+            type="button"
+          >
+            Stop
+          </button>
+        )}
       </div>
     </AbsoluteFill>
   );
 };
+
 
 const defaultEditorState = {
   duration: 10,
@@ -298,7 +401,7 @@ export const CountDownCraftContainer = () => {
           }}
         >
           {/* Live Preview */}
-          <CountdownPreview
+          <CountdownLivePreview
             duration={Number(editor.duration)}
             text={editor.text}
             fontFamily={editor.fontFamily}
