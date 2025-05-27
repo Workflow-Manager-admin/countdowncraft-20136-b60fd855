@@ -1,12 +1,16 @@
 import { Composition } from "remotion";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
+import { CountDownCraftContainer } from "./CountDownCraftContainer";
 
 // Each <Composition> is an entry in the sidebar!
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Main CountDownCraft app */}
+      <CountDownCraftContainer />
+
       <Composition
         // You can take the "id" to render a video:
         // npx remotion render src/index.ts <id> out/video.mp4
