@@ -211,10 +211,72 @@ export const CountDownCraftContainer = () => {
   const handleExport = useCallback(async () => {
     setExporting(true);
 
-    // Actual export logic would involve Remotion APIs.
-    // In CI/build non-browser, use static fallback:
-    setExporting(false);
-  }, []);
+    // Is Remotion's browser rendering API available?
+    // @ts-ignore
+    const isRemotionBrowserAvailable = typeof window !== "undefined" && window.remotion_renderMedia;
+    if (!isRemotionBrowserAvailable) {
+      alert("Remotion browser rendering is only supported in a local browser preview.\n" +
+        "In CI/build, use the CLI to render. (See README)");
+      setExporting(false);
+      return;
+    }
+
+    try {
+      // Dynamically import Remotion's renderMedia API for client-side browser export
+      // @ts-ignore
+      const { renderMedia } = window.remotion_renderMedia ?? (await import("remotion"));
+      if (typeof renderMedia !== "function") throw new Error("Remotion renderMedia() not available");
+
+      // Prepare settings for the export
+      const compositionId = "CountdownVideo";
+      const fps = 30;
+      const durationInFrames = Number(editor.duration) * fps;
+      const width = 1280;
+      const height = 720;
+
+      // Build input props for Remotion composition
+      const inputProps = {
+        duration: Number(editor.duration),
+        text: editor.text,
+        fontFamily: editor.fontFamily,
+        textColor: editor.textColor,
+        bgColor: editor.bgColor
+      };
+
+      // Show progress (Ready for download after animation)
+      setExporting("rendering");
+
+      // Render in browser: Remotion browser APIs will prompt to download the result
+      // https://www.remotion.dev/docs/player/render-media
+      await renderMedia({
+        composition: {
+          id: compositionId,
+          component: undefined, // not needed in browser API
+          durationInFrames,
+          fps,
+          width,
+          height,
+          props: inputProps
+        },
+        codec: "h264",
+        audioCodec: "aac",
+        defaultProps: inputProps,
+        downloadFileName: `countdown-${Date.now()}.mp4`,
+        onProgress: (progress: number) => {
+          // Optionally provide progress UI
+        }
+      });
+
+      setExporting(false);
+    } catch (err) {
+      alert(
+        "Export failed: " +
+          ((err && (err as any).message) || err || "Unknown error") +
+          "\n\nTry using the CLI for video export if this error persists."
+      );
+      setExporting(false);
+    }
+  }, [editor]);
 
   return (
     <div
