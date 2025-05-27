@@ -99,7 +99,7 @@ export const CountDownCraftContainer = () => {
   // PUBLIC_INTERFACE
   const handleEditorChange =
     (prop: keyof typeof defaultEditorState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (e: React.ChangeEvent<any>) => {
       const value = e.target.type === "color" ? e.target.value : e.target.value;
       setEditor((prev) => ({
         ...prev,
