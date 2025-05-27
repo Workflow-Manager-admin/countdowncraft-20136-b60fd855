@@ -21,9 +21,6 @@ const FONTS = [
   { label: "Mono", value: "Menlo, Monaco, monospace" }
 ];
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { AbsoluteFill } from "remotion";
-
 // Simple countdown live preview component with play/stop
 type CountdownLivePreviewProps = {
   duration: number;
@@ -180,7 +177,6 @@ const CountdownLivePreview = ({
     </AbsoluteFill>
   );
 };
-
 
 const defaultEditorState = {
   duration: 10,
