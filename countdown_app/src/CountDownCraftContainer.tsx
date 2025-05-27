@@ -1,0 +1,348 @@
+import React, { useState, useCallback, useRef } from "react";
+import { AbsoluteFill, useVideoConfig, Player, continueRender, delayRender } from "remotion";
+
+// PUBLIC_INTERFACE
+/**
+ * Main container for the CountDownCraft app.
+ * - Editor for countdown duration, text, fonts, and colors
+ * - Live Remotion preview
+ * - Export as MP4
+ * - Responsive layout
+ */
+const COLOR_PRIMARY = "#040490";
+const COLOR_SECONDARY = "#0ec45c";
+const COLOR_ACCENT = "#c71f3b";
+const LIGHT_BG = "#f9f9fa";
+const DARK_TEXT = "#101042";
+
+const FONTS = [
+  { label: "Sans (Default)", value: "SF Pro Text, Helvetica, Arial, sans-serif" },
+  { label: "Serif", value: "Merriweather, Georgia, serif" },
+  { label: "Mono", value: "Menlo, Monaco, monospace" }
+];
+
+// Simple countdown preview component (could be replaced with a Remotion composition)
+const CountdownPreview = ({
+  duration,
+  text,
+  fontFamily,
+  textColor,
+  bgColor,
+}) => {
+  const videoConfig = useVideoConfig();
+  const [display, setDisplay] = useState(duration);
+
+  React.useEffect(() => {
+    setDisplay(duration);
+    if (duration > 0) {
+      const interval = setInterval(() => {
+        setDisplay((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [duration]);
+
+  return (
+    <AbsoluteFill
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background: bgColor,
+        height: "100%",
+        width: "100%",
+        borderRadius: 24,
+        boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+        position: "relative"
+      }}
+    >
+      <div style={{
+        fontFamily,
+        fontWeight: 700,
+        color: textColor,
+        fontSize: "min(8vw, 4rem)",
+        marginBottom: 24,
+        textAlign: "center"
+      }}>
+        {text}
+      </div>
+      <div style={{
+        fontFamily: "monospace",
+        fontSize: "min(14vw,7rem)",
+        color: COLOR_PRIMARY,
+        fontWeight: "bold",
+        letterSpacing: 2
+      }}>
+        {String(display).padStart(2, "0")}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+const defaultEditorState = {
+  duration: 10,
+  text: "Get ready!",
+  fontFamily: FONTS[0].value,
+  textColor: COLOR_PRIMARY,
+  bgColor: "#ffffff"
+};
+
+// PUBLIC_INTERFACE
+export const CountDownCraftContainer = () => {
+  const [editor, setEditor] = useState(defaultEditorState);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const playerRef = useRef(null);
+
+  // PUBLIC_INTERFACE
+  const handleEditorChange = (prop) => (e) => {
+    const value = e.target.type === "color" ? e.target.value : e.target.value;
+    setEditor((prev) => ({
+      ...prev,
+      [prop]: value
+    }));
+  };
+
+  // PUBLIC_INTERFACE
+  const handleExport = useCallback(async () => {
+    // Export logic using Remotion Lambda or render API.
+    setExporting(true);
+    // Example placeholder for export logic:
+    setTimeout(() => {
+      alert("Export as MP4 would be triggered here.");
+      setExporting(false);
+    }, 1000);
+  }, []);
+
+  // Responsiveness
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 900;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        height: "100vh",
+        background: LIGHT_BG,
+        fontFamily: editor.fontFamily
+      }}
+    >
+      {/* Editor Panel / Drawer */}
+      <div
+        style={{
+          width: isMobile ? "100%" : 340,
+          minWidth: isMobile ? undefined : 260,
+          background: "#fff",
+          borderRight: isMobile ? undefined : `1px solid #ececf1`,
+          padding: "32px 24px",
+          position: isMobile ? "fixed" : "relative",
+          top: 0,
+          left: 0,
+          zIndex: 2,
+          height: isMobile ? "100vh" : "100%",
+          boxShadow: isMobile && showDrawer ? "0 4px 16px rgba(0,0,0,0.08)" : undefined,
+          transform: isMobile && !showDrawer ? "translateY(-100%)" : undefined,
+          transition: "all 0.3s"
+        }}
+        aria-label="Countdown editor panel"
+        hidden={isMobile && !showDrawer}
+      >
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 18
+        }}>
+          <h2 style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color: COLOR_PRIMARY,
+            margin: 0
+          }}>Countdown Editor</h2>
+          {isMobile && (
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: 24,
+                cursor: "pointer",
+                color: COLOR_PRIMARY
+              }}
+              aria-label="Close drawer"
+              onClick={() => setShowDrawer(false)}
+            >×</button>
+          )}
+        </div>
+        <form style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <label>
+            <span style={labelStyle}>Countdown Duration (sec)</span>
+            <input
+              type="number"
+              min={1}
+              max={600}
+              value={editor.duration}
+              style={inputStyle}
+              onChange={handleEditorChange("duration")}
+            />
+          </label>
+          <label>
+            <span style={labelStyle}>Display Text</span>
+            <input
+              type="text"
+              maxLength={40}
+              value={editor.text}
+              style={inputStyle}
+              onChange={handleEditorChange("text")}
+            />
+          </label>
+          <label>
+            <span style={labelStyle}>Font</span>
+            <select
+              value={editor.fontFamily}
+              style={inputStyle}
+              onChange={handleEditorChange("fontFamily")}
+            >
+              {FONTS.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span style={labelStyle}>Text Color</span>
+            <input
+              type="color"
+              value={editor.textColor}
+              style={{ ...inputStyle, padding: 0, width: 40, height: 32, border: "none" }}
+              onChange={handleEditorChange("textColor")}
+            />
+          </label>
+          <label>
+            <span style={labelStyle}>Background Color</span>
+            <input
+              type="color"
+              value={editor.bgColor}
+              style={{ ...inputStyle, padding: 0, width: 40, height: 32, border: "none" }}
+              onChange={handleEditorChange("bgColor")}
+            />
+          </label>
+        </form>
+        <div style={{ marginTop: 32 }}>
+          <button
+            disabled={exporting}
+            onClick={handleExport}
+            style={{
+              background: COLOR_SECONDARY,
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "16px 0",
+              width: "100%",
+              fontWeight: "bold",
+              fontSize: 18,
+              boxShadow: `0 2px 8px 0 ${COLOR_SECONDARY}30`,
+              cursor: "pointer",
+              marginBottom: 8,
+              transition: "background .2s"
+            }}
+            aria-label="Export video"
+          >
+            {exporting ? "Exporting..." : "Export as MP4"}
+          </button>
+        </div>
+        <footer style={{
+          fontSize: 12, color: "#a0a4de", marginTop: 18, textAlign: "center"
+        }}>
+          CountDownCraft • Powered by Remotion
+        </footer>
+      </div>
+      {/* Backdrop for mobile drawer */}
+      {isMobile && showDrawer && (
+        <div
+          style={{
+            position: "fixed", left: 0, top: 0, width: "100vw", height: "100vh",
+            background: "rgba(0,0,0,0.09)", zIndex: 1
+          }}
+          onClick={() => setShowDrawer(false)}
+        />
+      )}
+      {/* Preview Area */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 0,
+          position: "relative"
+        }}
+      >
+        <div
+          style={{
+            width: "min(90vw, 700px)",
+            maxWidth: "100vw",
+            height: isMobile ? "48vw" : "35vw",
+            minHeight: 320,
+            margin: isMobile ? "90px auto 24px" : "48px auto",
+            background: "#fff",
+            boxShadow: "0 0 14px 0 rgba(4,4,144,0.06)",
+            borderRadius: 26,
+            position: "relative"
+          }}
+        >
+          {/* Live Preview */}
+          <CountdownPreview
+            duration={Number(editor.duration)}
+            text={editor.text}
+            fontFamily={editor.fontFamily}
+            textColor={editor.textColor}
+            bgColor={editor.bgColor}
+          />
+        </div>
+        {/* Show FAB for opening settings drawer on mobile */}
+        {isMobile && !showDrawer && (
+          <button
+            onClick={() => setShowDrawer(true)}
+            aria-label="Open editor"
+            style={{
+              position: "fixed",
+              right: 20,
+              bottom: 30,
+              background: COLOR_ACCENT,
+              color: "#fff",
+              border: "none",
+              borderRadius: "50%",
+              width: 60,
+              height: 60,
+              fontSize: "2rem",
+              boxShadow: `0 2px 12px 0 ${COLOR_ACCENT}32`,
+              cursor: "pointer",
+              zIndex: 3
+            }}
+          >☰</button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Common styles
+const labelStyle = {
+  color: COLOR_PRIMARY,
+  fontSize: 14,
+  fontWeight: 600,
+  marginBottom: 3,
+  display: "block"
+};
+const inputStyle = {
+  fontSize: 16,
+  width: "100%",
+  padding: "8px 10px",
+  marginTop: 4,
+  border: "1px solid #d1d6ff",
+  borderRadius: 5,
+  background: "#fcfcfe",
+  color: DARK_TEXT,
+  fontFamily: "inherit"
+};
