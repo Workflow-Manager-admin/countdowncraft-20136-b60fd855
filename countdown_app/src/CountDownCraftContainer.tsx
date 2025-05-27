@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { AbsoluteFill, useVideoConfig } from "remotion";
+import { AbsoluteFill } from "remotion";
 
 // PUBLIC_INTERFACE
 /**
@@ -84,12 +84,9 @@ export const CountDownCraftContainer = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [exporting, setExporting] = useState(false);
 
-  // Detect mobile by screen width at initial render only.
-  const [isMobile] = useState(() =>
-    typeof navigator !== "undefined"
-      ? /Mobi|Android/i.test(navigator.userAgent) || (typeof window !== "undefined" && window.innerWidth < 900)
-      : false
-  );
+  // Static mobile detection stub; always false in SSR/build for Remotion safety.
+  // In real SPA/CSR, replace with a custom hook using window.matchMedia or screen width.
+  const isMobile = false;
 
   // PUBLIC_INTERFACE
   const handleEditorChange = (prop) => (e) => {
@@ -104,13 +101,9 @@ export const CountDownCraftContainer = () => {
   const handleExport = useCallback(async () => {
     setExporting(true);
 
-    // Actual export logic would involve Remotion APIs;
-    // here we simply show a visible message.
-    // eslint-disable-next-line no-console
-    console.log("Export as MP4 would be triggered here.");
-    setTimeout(() => {
-      setExporting(false);
-    }, 1200);
+    // Actual export logic would involve Remotion APIs.
+    // In CI/build non-browser, use static fallback:
+    setExporting(false);
   }, []);
 
   return (
