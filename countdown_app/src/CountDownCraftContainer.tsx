@@ -390,7 +390,7 @@ export const CountDownCraftContainer = () => {
         </form>
         <div style={{ marginTop: 32 }}>
           <button
-            disabled={!!exporting} // exporting can now be boolean or string
+            disabled={exporting !== null}
             onClick={handleExport}
             style={{
               background: COLOR_SECONDARY,
@@ -411,12 +411,12 @@ export const CountDownCraftContainer = () => {
           >
             {exporting === "rendering"
               ? "Rendering MP4..."
-              : exporting
+              : exporting === "starting"
               ? "Exporting..."
               : "Export as MP4"}
           </button>
         </div>
-        {!!exporting && (
+        {exporting !== null && (
           <div style={{
             color: COLOR_ACCENT,
             marginTop: 10,
